@@ -4,9 +4,9 @@ from pydub.silence import split_on_silence
 import sys
 import os
 
-def MusicSegment(filename, seconds = 30):
+def MusicSegment(filename, seconds = 15):
     #audio_segment = AudioSegment.from_file("F:/MIProject/Never.mp3")
-    audio_segment = AudioSegment.from_file(filename)
+    audio_segment = AudioSegment.from_mp3(filename)
 
     total = int(audio_segment.duration_seconds / seconds)
     for i in range(total):
