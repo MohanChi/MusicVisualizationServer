@@ -83,7 +83,7 @@ def MusicDataReceive():
 def videoSend(file_name):
     if request.method == 'GET':
         #return send_from_directory(os.path.dirname(__file__), "Always.mp3", as_attachment=True)
-        return send_from_directory(os.path.dirname(__file__), cvData.folder + '\\' + file_name + '.mp4', as_attachment=True)
+        return send_from_directory(cvData.folder, file_name + '.mp4', as_attachment=True)
 
 def WriteInFile(string):
     f = open('StringMp3.mp3', 'w')
