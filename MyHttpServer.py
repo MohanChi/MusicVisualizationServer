@@ -4,6 +4,8 @@ from flask import send_from_directory
 import json
 import os
 import lucidsonicdreams
+import multiprocessing
+import MusicSegAndSpl
 
 app = Flask(__name__)
 
@@ -122,17 +124,24 @@ def MusicDataReceive():
         file.save(cvData.folder + '\\' + cvData.musicname)  # 保存文件
         global isReceiveParameterData
         if isReceiveParameterData:
-            Generate(
-                song=cvData.folder + '\\' + cvData.musicname,
-                style=cvData.style + '.pkl',
-                outfile=cvData.folder + '\\' + cvData.filename + '.mp4',
-                speed_fpm=cvData.speed_fpm, pulse_react=cvData.pulse_react, motion_react=cvData.motion_react,
-                motion_randomness=cvData.motion_randomness, contrast_strength=cvData.contrast_strength,
-                class_pitch_react=cvData.class_pitch_react, flash_strength=cvData.flash_strength,
-                pulse_percussive=cvData.pulse_percussive, pulse_harmonic=cvData.pulse_harmonic,
-                motion_percussive=cvData.motion_percussive, motion_harmonic=cvData.motion_harmonic,
-                flash_percussive=cvData.flash_percussive, contrast_percussive=cvData.contrast_percussive,
-                resolution=cvData.resolution, start=cvData.start, fps=cvData.fps)
+            MusicSegAndSpl.MusicSegmentByProcess(cvData.folder + '\\' + cvData.musicname,
+                                                 cvData.folder, 3)
+            MultiThreadProcess(3)
+            # Generate(
+            #     song=cvData.folder + '\\' + cvData.musicname,
+            #     style=cvData.style + '.pkl',
+            #     outfile=cvData.folder + '\\' + cvData.filename + '.mp4',
+            #     speed_fpm=cvData.speed_fpm, pulse_react=cvData.pulse_react, motion_react=cvData.motion_react,
+            #     motion_randomness=cvData.motion_randomness, contrast_strength=cvData.contrast_strength,
+            #     class_pitch_react=cvData.class_pitch_react, flash_strength=cvData.flash_strength,
+            #     pulse_percussive=cvData.pulse_percussive, pulse_harmonic=cvData.pulse_harmonic,
+            #     motion_percussive=cvData.motion_percussive, motion_harmonic=cvData.motion_harmonic,
+            #     flash_percussive=cvData.flash_percussive, contrast_percussive=cvData.contrast_percussive,
+            #     resolution=cvData.resolution, start=cvData.start, fps=cvData.fps)
+            MusicSegAndSpl.ConcatenateVideos(cvData.folder + '\\0.mp4',
+                                             cvData.folder + '\\1.mp4',
+                                             cvData.folder + '\\2.mp4',
+                                             cvData.folder + '\\' + cvData.filename + '.mp4')
         isReceiveParameterData = False
         return file.filename + ' is here!!!'
 
@@ -142,8 +151,21 @@ def videoSend(file_name):
         #return send_from_directory(os.path.dirname(__file__), "Always.mp3", as_attachment=True)
         return send_from_directory(cvData.folder, file_name + '.mp4', as_attachment=True)
 
-def WriteInFile(string):
-    f = open('StringMp3.mp3', 'w')
-    f.write(string)
-    f.close()
-    return 'Write is Here!!!'
+def MultiThreadProcess(index):
+    print(multiprocessing.cpu_count())
+    pool = multiprocessing.Pool(index) #multiprocessing.cpu_count()
+    for i in range(index):
+        pool.apply_async(Generate,
+                (cvData.folder + '\\chunk' + str(i) + '.mp3' ,
+                cvData.style + '.pkl',
+                cvData.folder + '\\' + str(i) + '.mp4',
+                cvData.speed_fpm, cvData.pulse_react, cvData.motion_react,
+                cvData.motion_randomness, cvData.contrast_strength,
+                cvData.class_pitch_react, cvData.flash_strength,
+                cvData.pulse_percussive, cvData.pulse_harmonic,
+                cvData.motion_percussive, cvData.motion_harmonic,
+                cvData.flash_percussive, cvData.contrast_percussive,
+                cvData.resolution, cvData.start, cvData.fps, ))
+    pool.close()
+    pool.join()
+    print("pool close!")
